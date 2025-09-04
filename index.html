@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página de Recaudación de Fondos</title>
+    
+    <!-- Tailwind CSS para un diseño rápido y moderno -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+    <style>
+        /* Usamos la fuente Inter como predeterminada */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Colores personalizados inspirados en el logo */
+        :root {
+            --primary-blue: #4A90E2; /* Azul principal de la rana */
+            --dark-purple: #4A00E0; /* Morado oscuro de los contornos */
+            --accent-red: #D0021B;  /* Rojo de la capa */
+            --light-bg: #F8F9FA;   /* Fondo claro */
+            --dark-text: #212529;   /* Texto oscuro */
+        }
+
+        /* Aplicación de colores personalizados con Tailwind */
+        .bg-primary-blue { background-color: var(--primary-blue); }
+        .text-primary-blue { color: var(--primary-blue); }
+        .bg-dark-purple { background-color: var(--dark-purple); }
+        .text-dark-purple { color: var(--dark-purple); }
+        .bg-accent-red { background-color: var(--accent-red); }
+        .hover\:bg-accent-red-dark:hover { background-color: #a80216; }
+        .border-primary-blue { border-color: var(--primary-blue); }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-2xl bg-white rounded-2xl shadow-lg p-6 md:p-10 transform transition-all hover:shadow-2xl">
+        
+        <!-- Encabezado -->
+        <header class="text-center mb-8">
+            <!-- Comentario: Aquí puedes poner la URL de tu logo -->
+            <!-- <img src="URL_DE_TU_LOGO.png" alt="Logo Novalink" class="mx-auto h-24 w-auto mb-4"> -->
+            <h1 class="text-4xl md:text-5xl font-extrabold text-dark-purple tracking-tight">¡Únete a nuestra causa!</h1>
+            <p class="text-gray-600 mt-2 text-lg">Tu apoyo hace la diferencia. Ayúdanos a alcanzar nuestra meta.</p>
+        </header>
+
+        <!-- Sección de progreso -->
+        <main>
+            <div class="bg-gray-50 rounded-xl p-6 border border-gray-200">
+                <!-- Monto recaudado -->
+                <div class="text-center">
+                    <p class="text-lg text-gray-700">Hemos recaudado</p>
+                    <p id="current-amount" class="text-6xl md:text-7xl font-bold text-primary-blue my-2">$0</p>
+                </div>
+                
+                <!-- Barra de Progreso -->
+                <div class="w-full bg-gray-200 rounded-full h-4 my-6 overflow-hidden">
+                    <div id="progress-bar" class="bg-gradient-to-r from-cyan-400 to-primary-blue h-4 rounded-full transition-all duration-1000 ease-out" style="width: 0%;"></div>
+                </div>
+
+                <!-- Detalles de la meta -->
+                <div class="flex justify-between items-center text-gray-600 font-medium">
+                    <span class="text-sm">0%</span>
+                    <div class="text-center">
+                        <span class="font-bold text-lg text-dark-purple" id="goal-amount">Meta: $0</span>
+                    </div>
+                    <span class="text-sm">100%</span>
+                </div>
+            </div>
+
+            <!-- Estadísticas Adicionales -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 text-center">
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <h3 class="font-bold text-2xl text-dark-purple" id="donor-count">0</h3>
+                    <p class="text-gray-600">Donadores</p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <h3 class="font-bold text-2xl text-dark-purple" id="days-left">0</h3>
+                    <p class="text-gray-600">Días restantes</p>
+                </div>
+            </div>
+
+        </main>
+
+    </div>
+
+    <script>
+        // --- CONFIGURACIÓN ---
+        // Cambia estos valores para actualizar la página
+        const amountRaised = 7850;   // El dinero que se ha recaudado hasta ahora
+        const fundraisingGoal = 10000;  // La meta final
+        const totalDonors = 123;      // Número de donadores
+        const campaignEndDate = '2025-09-18'; // Define la fecha de finalización (Año-Mes-Día)
+        // --------------------
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Seleccionamos los elementos del DOM
+            const currentAmountEl = document.getElementById('current-amount');
+            const goalAmountEl = document.getElementById('goal-amount');
+            const progressBarEl = document.getElementById('progress-bar');
+            const donorCountEl = document.getElementById('donor-count');
+            const daysLeftEl = document.getElementById('days-left');
+            
+            // --- CÁLCULO DE DÍAS RESTANTES ---
+            const endDate = new Date(campaignEndDate);
+            const today = new Date();
+            // Aseguramos que la comparación sea justa estableciendo la hora
+            endDate.setHours(23, 59, 59, 999); 
+            today.setHours(0, 0, 0, 0);
+            
+            const diffTime = endDate - today;
+            const daysLeft = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+            // ------------------------------------
+            
+            // Calculamos el porcentaje
+            const percentage = Math.min((amountRaised / fundraisingGoal) * 100, 100);
+
+            // Función para animar el conteo de números
+            const animateCount = (element, target, duration = 1500, isCurrency = false) => {
+                let start = 0;
+                const stepTime = 20; // ms
+                const steps = duration / stepTime;
+                const increment = target / steps;
+                
+                const timer = setInterval(() => {
+                    start += increment;
+                    if (start >= target) {
+                        clearInterval(timer);
+                        start = target;
+                    }
+                    const formattedValue = isCurrency 
+                        ? `$${Math.floor(start).toLocaleString('es-MX')}` 
+                        : Math.floor(start).toLocaleString('es-MX');
+                    element.textContent = formattedValue;
+                }, stepTime);
+            };
+            
+            // Formateo inicial de la meta
+            goalAmountEl.textContent = `Meta: $${fundraisingGoal.toLocaleString('es-MX')}`;
+            
+            // Iniciamos las animaciones después de un breve retraso para que se vea mejor
+            setTimeout(() => {
+                // Animar barra de progreso
+                progressBarEl.style.width = `${percentage}%`;
+                
+                // Animar los números
+                animateCount(currentAmountEl, amountRaised, 1500, true);
+                animateCount(donorCountEl, totalDonors, 1200);
+                animateCount(daysLeftEl, daysLeft, 1000);
+            }, 500);
+        });
+    </script>
+</body>
+</html>
+
